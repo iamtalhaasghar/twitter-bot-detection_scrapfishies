@@ -6,29 +6,34 @@ import pandas as pd
 import pickle
 import tweepy
 
-from datetime import datetime
+from datetime import datetime,timezone
 import re
 import time
 
+from utils import get_logger
+from auth import api
 
-twitter_keys = {
-    'consumer_key': os.environ.get('consumer_key', None),
-    'consumer_secret': os.environ.get('consumer_secret', None),
-    'access_token_key': os.environ.get('access_token_key', None),
-    'access_token_secret': os.environ.get('access_token_secret', None)
-}
+
+logger = get_logger('logs', 'flask.log')
+
+#twitter_keys = {
+#    'consumer_key': os.environ.get('consumer_key', None),
+#    'consumer_secret': os.environ.get('consumer_secret', None),
+#    'access_token_key': os.environ.get('access_token_key', None),
+#    'access_token_secret': os.environ.get('access_token_secret', None)
+#}
 
 # Get fully-trained XGBoostClassifier model
 with open('model.pickle', 'rb') as read_file:
     xgb_model = pickle.load(read_file)
 
 # Set up connection to Twitter API
-auth = tweepy.OAuthHandler(
-    twitter_keys['consumer_key'], twitter_keys['consumer_secret'])
-auth.set_access_token(
-    twitter_keys['access_token_key'], twitter_keys['access_token_secret'])
+#auth = tweepy.OAuthHandler(
+#    twitter_keys['consumer_key'], twitter_keys['consumer_secret'])
+#auth.set_access_token(
+#    twitter_keys['access_token_key'], twitter_keys['access_token_secret'])
 
-api = tweepy.API(auth)
+#api = tweepy.API(auth)
 
 
 def get_user_features(screen_name):
@@ -40,10 +45,10 @@ def get_user_features(screen_name):
 
     try:
         # Get user information from screen name
-        user = api.get_user(screen_name)
+        user = api.get_user(screen_name=screen_name)
 
         # account features to return for predicton
-        account_age_days = (datetime.now() - user.created_at).days
+        account_age_days = (datetime.now(timezone.utc) - user.created_at).days
         verified = user.verified
         geo_enabled = user.geo_enabled
         default_profile = user.default_profile
@@ -71,7 +76,8 @@ def get_user_features(screen_name):
                             average_tweets_per_day, network, tweet_to_followers, follower_acq_rate,
                             friends_acq_rate]
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return 'User not found'
 
     return account_features if len(account_features) == 14 else f'User not found'
@@ -115,3 +121,7 @@ def bot_proba(twitter_handle):
         user = np.matrix(user_features)
         proba = np.round(xgb_model.predict_proba(user)[:, 1][0]*100, 2)
         return proba
+
+if __name__=="__main__":
+    u = get_user_features('ImranRiazKhan')
+    print(u)
