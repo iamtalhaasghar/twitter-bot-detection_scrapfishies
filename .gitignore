@@ -132,3 +132,4 @@ dmypy.json
 
 # Secrets
 flask_app/secrets.py
+flask_app/twitter_human_bots_dataset.csv
