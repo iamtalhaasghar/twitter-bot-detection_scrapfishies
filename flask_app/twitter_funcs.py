@@ -104,10 +104,8 @@ def get_user_features(screen_name):
             np.log(1 + (friends_count / account_age_days)), 3)
 
         # organizing list to be returned
-        account_features = [verified, hour_created, geo_enabled, default_profile, default_profile_image,
-                            favourites_count, followers_count, friends_count, statuses_count,
-                            average_tweets_per_day, network, tweet_to_followers, follower_acq_rate,
-                            friends_acq_rate]
+        account_features = [verified, hour_created, geo_enabled, default_profile, default_profile_image, favourites_count, followers_count, friends_count, statuses_count, average_tweets_per_day, network, tweet_to_followers, follower_acq_rate,friends_acq_rate]
+        logger.info((f'features for {screen_name} verified:{verified}, hour_created:{hour_created}, geo_enabled:{geo_enabled}, default_profile:{default_profile}, default_profile_image:{default_profile_image}, favourites_count:{favourites_count}, followers_count:{followers_count}, friends_count:{friends_count}, statuses_count:{statuses_count}, average_tweets_per_day:{average_tweets_per_day}, network:{network}, tweet_to_followers:{tweet_to_followers}, follower_acq_rate:{follower_acq_rate}, friends_acq_rate:{friends_acq_rate}'))
 
     except Exception as e:
         logger.exception(e)
