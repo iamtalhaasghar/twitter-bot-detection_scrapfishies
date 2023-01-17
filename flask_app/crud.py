@@ -2,19 +2,22 @@
 
 import pymysql.cursors
 from glob import glob
-import json, csv
+import json, csv, os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Connect to the database
 connection = pymysql.connect(host='localhost',
                              user='root',
-                             password='passwd_from_env',
+                             password=os.getenv('MYSQL_ROOT_PASS'),
                              database='twitter_accounts',
                              cursorclass=pymysql.cursors.DictCursor)
 
 def json_to_db():
     with connection:
         with connection.cursor() as cursor:
-            for c,i in enumerate(glob('37_k_user_path_from_env/*.json')):
+            for c,i in enumerate(glob('%s/*.json' % os.getenv('37_K_USERS'))):
                 print(c, i)
                 data = json.loads(open(i, 'r').read())
                 
@@ -66,5 +69,6 @@ def update_account_type():
                     cursor.execute(sql, (row[1], row[0])) 
             connection.commit()
 if __name__=="__main__":
+    #json_to_db()
     update_account_type()
 
