@@ -13,7 +13,9 @@ import time
 
 from utils import get_logger
 from auth import api
+from dotenv import load_dotenv
 
+load_dotenv()
 
 logger = get_logger('logs', 'data.log')
 
@@ -26,7 +28,7 @@ def get_user_features(user_id):
     '''
 
     try:
-        file_path = '/home/maira/user_data/37k/u_%s.json' % user_id
+        file_path = '%s/u_%s.json' % (os.getenv('37_K_USERS'), user_id)
         if os.path.exists(file_path):
             #logger.info(f'skipping {file_path}')
             return

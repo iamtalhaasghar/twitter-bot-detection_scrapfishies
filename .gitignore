@@ -135,3 +135,4 @@ flask_app/secrets.py
 flask_app/twitter_human_bots_dataset.csv
 flask_app/logs
 requirements.txt
+flask_app/static/logo.png

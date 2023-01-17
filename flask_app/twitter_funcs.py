@@ -154,5 +154,6 @@ def bot_proba(twitter_handle):
         return proba
 
 if __name__=="__main__":
-    u = get_user_features('ImranRiazKhan')
+    username = input('Enter a username:')
+    u = get_user_features(username)
     print(u)
