@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-import pickle
+import pickle, json
 import tweepy
 
 from datetime import datetime,timezone
@@ -12,6 +12,14 @@ import time
 
 from utils import get_logger
 from auth import api
+from dotenv import load_dotenv
+import dicttoobject
+
+if not load_dotenv():
+    print('cant load .env file. Exiting!')
+    exit()
+
+users_folder = os.getenv('USERS_CACHE_FOLDER')
 
 
 logger = get_logger('logs', 'flask.log')
@@ -24,7 +32,7 @@ logger = get_logger('logs', 'flask.log')
 #}
 
 # Get fully-trained XGBoostClassifier model
-with open('model.pickle', 'rb') as read_file:
+with open('model_37k.pickle', 'rb') as read_file:
     xgb_model = pickle.load(read_file)
 
 # Set up connection to Twitter API
@@ -35,6 +43,26 @@ with open('model.pickle', 'rb') as read_file:
 
 #api = tweepy.API(auth)
 
+def is_cached(screen_name):
+    filepath = os.path.join(users_folder, f'{screen_name}.json')
+    if os.path.isfile(filepath):
+        logger.info(('reading cached data', filepath))
+        data = json.loads(open(filepath, 'r').read())
+        data['created_at'] = datetime.strptime(data['created_at'], '%a %b %d %H:%M:%S %z %Y')
+        return dicttoobject.dict_to_readonly_object(data)
+
+
+def save_user(screen_name, data):
+    file_path = os.path.join(users_folder, f'{screen_name}.json')
+    os.makedirs(users_folder, exist_ok=True)
+    if os.path.isfile(file_path):
+        logger.info(('Duplicate file found - skipping', file_path))
+        return None
+    with open(file_path,'w') as f:
+        json.dump(data,f,indent=4) # write to file
+    logger.info(('File saved', file_path))
+    return file_path
+
 
 def get_user_features(screen_name):
     '''
@@ -44,9 +72,14 @@ def get_user_features(screen_name):
     '''
 
     try:
-        # Get user information from screen name
-        user = api.get_user(screen_name=screen_name)
-
+         
+        user = is_cached(screen_name)
+        if not user:
+            # Get user information from screen name
+            user = api.get_user(screen_name=screen_name)
+            save_user(screen_name, user._json)
+            
+        
         # account features to return for predicton
         account_age_days = (datetime.now(timezone.utc) - user.created_at).days
         verified = user.verified
